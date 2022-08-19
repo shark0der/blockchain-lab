@@ -1,0 +1,55 @@
+version: '3.1'
+
+services:
+
+  erigon:
+    image: thorax/erigon:v2022.08.01
+    user: ${DOCKER_UID:-1000}:${DOCKER_GID:-1000}
+    environment:
+      - DATA_DIR=${DATA_DIR:-~/.local/share/erigon/}
+    command: |
+      /bin/sh -c "
+        [ -d $$DATA_DIR/chaindata ] || erigon init ~/genesis.json --networkid 69420 --http=false
+        echo $MINER_KEY > ~/.sigfile
+        erigon --private.api.addr=0.0.0.0:9090 --networkid 69420 --http=false --mine --miner.sigfile ~/.sigfile
+      "
+    volumes:
+      - ./data:/home/erigon/.local/share/erigon/
+      - ./genesis.json:/home/erigon/genesis.json
+    restart: unless-stopped
+    mem_swappiness: 0
+
+  rpcdaemon:
+    image: otterscan/erigon:v2022.08.01-otterscan
+    user: ${DOCKER_UID:-1000}:${DOCKER_GID:-1000}
+    volumes_from: [ erigon ]
+    command: |
+      rpcdaemon
+        ${RPCDAEMON_FLAGS-}
+        --http.api web3,eth,net,erigon,ots
+        --http.addr=0.0.0.0
+        --http.vhosts=*
+        --http.corsdomain=*
+        --ws
+        --datadir /home/erigon/.local/share/erigon
+        --private.api.addr=erigon:9090
+    ports: [ "8545:8545" ]
+    restart: unless-stopped
+    mem_swappiness: 0
+
+  otterscan:
+    image: otterscan/otterscan:${OTTERSCAN_TAG:-latest}
+    environment:
+      - ERIGON_URL=${ERIGON_URL}
+      - CHAINS_DIR=/usr/share/nginx/html/chains
+    ports: [ "8080:80" ]
+    restart: unless-stopped
+    mem_swappiness: 0
+    command: |
+      /bin/sh -c "
+        [ -d $$CHAINS_DIR/eip155-69420.json ] || cp $$CHAINS_DIR/eip155-1.json $$CHAINS_DIR/eip155-69420.json
+        /run-nginx.sh
+      "
+
+volumes:
+  datadir:

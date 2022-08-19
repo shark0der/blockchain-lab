@@ -1,0 +1,4 @@
+.env
+.idea
+data/*
+!data/.gitkeep
