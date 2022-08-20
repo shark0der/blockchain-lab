@@ -1,10 +1,6 @@
 require('dotenv').config();
 require('@nomicfoundation/hardhat-toolbox');
 
-const forking = process.env.FORK_URL
-  ? { url: process.env.FORK_URL }
-  : undefined;
-
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
 
@@ -12,7 +8,10 @@ module.exports = {
 
   networks: {
     hardhat: {
-      forking,
+      forking: {
+        url: process.env.PROVIDER_URL,
+        enabled: !!process.env.FORK,
+      },
     },
   },
 
