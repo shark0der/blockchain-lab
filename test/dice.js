@@ -12,7 +12,8 @@ describe('Dice', function () {
     await dice.deployed();
 
     // fund
-    await dice.fund({ value: ethers.utils.parseEther('100') });
+    const fundTx = await dice.fund({ value: ethers.utils.parseEther('100') });
+    await fundTx.wait();
 
     // pass params
     this.dice = dice;

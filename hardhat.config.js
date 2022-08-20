@@ -8,6 +8,7 @@ module.exports = {
 
   networks: {
     hardhat: {
+      hardfork: 'berlin',
       forking: {
         url: process.env.PROVIDER_URL,
         enabled: !!process.env.FORK,
