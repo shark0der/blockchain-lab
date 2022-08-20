@@ -1,4 +1,7 @@
 .env
 .idea
-data/*
-!data/.gitkeep
+/artifacts
+/cache
+/data/*
+!/data/.gitkeep
+/node_modules
