@@ -7,15 +7,21 @@ services:
     user: ${DOCKER_UID:-1000}:${DOCKER_GID:-1000}
     environment:
       - DATA_DIR=${DATA_DIR:-~/.local/share/erigon/}
+      - MINER_ADDRESS=${MINER_ADDRESS}
     command: |
       /bin/sh -c "
-        [ -d $$DATA_DIR/chaindata ] || erigon init ~/genesis.json --networkid 69420 --http=false
+        [ -d $$DATA_DIR/chaindata ] || (
+          cp /tmp/genesis.json ~/genesis.json
+          sed -i s/_MINER_ADDRESS_/$$MINER_ADDRESS/g ~/genesis.json
+          cat ~/genesis.json
+          erigon init ~/genesis.json --networkid 69420 --http=false
+        )
         echo $MINER_KEY > ~/.sigfile
         erigon --private.api.addr=0.0.0.0:9090 --networkid 69420 --http=false --mine --miner.sigfile ~/.sigfile
       "
     volumes:
       - ./data:/home/erigon/.local/share/erigon/
-      - ./genesis.json:/home/erigon/genesis.json
+      - ./genesis.json:/tmp/genesis.json
     restart: unless-stopped
     mem_swappiness: 0
 
